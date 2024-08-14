@@ -3,7 +3,7 @@ from pprint import pprint
 
 import numpy as np
 import pandas as pd
-from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -16,7 +16,6 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 # 데이터 읽어오기
-#ROOT_DIR = "C:/Users/antl/Desktop/LG Aimers/v2/"
 ROOT_DIR = "C:/Users/hyunj/OneDrive/바탕 화면/LG Aimers"
 RANDOM_STATE = 110
 
@@ -38,12 +37,6 @@ df_normal = df_normal.sample(n=int(num_abnormal * normal_ratio), replace=False, 
 df_concat = pd.concat([df_normal, df_abnormal], axis=0).reset_index(drop=True)
 df_concat.value_counts("target")
 
-"""
-# 엑셀 파일로 저장
-output_path = os.path.join(ROOT_DIR, "dataset/undersampled_data.xlsx")
-df_concat.to_excel(output_path, index=False)
-print(f"Undersampled data saved to {output_path}")
-"""
 # 데이터 분할
 df_train, df_val = train_test_split(
     df_concat,
@@ -52,21 +45,19 @@ df_train, df_val = train_test_split(
     random_state=RANDOM_STATE,
 )
 
-
 def print_stats(df: pd.DataFrame):
     num_normal = len(df[df["target"] == "Normal"])
     num_abnormal = len(df[df["target"] == "AbNormal"])
 
     print(f"  Total: Normal: {num_normal}, AbNormal: {num_abnormal}" + f" ratio: {num_abnormal/num_normal}")
 
-
 # Print statistics
 print(f"  \tAbnormal\tNormal")
 print_stats(df_train)
 print_stats(df_val)
 
-# 모델 정의 (SVM으로 변경)
-model = SVC(kernel='rbf', random_state=RANDOM_STATE)  # 기본적으로 RBF 커널 사용
+# 모델 정의
+model = KNeighborsClassifier() 
 
 # 모델 학습
 features = []
@@ -98,7 +89,6 @@ test_pred = model.predict(df_test_x)
 test_pred
 
 # 제출 파일 작성
-# 제출 데이터 읽어오기 (df_test는 전처리된 데이터가 저장됨)
 df_sub = pd.read_csv("C:/Users/hyunj/OneDrive/바탕 화면/LG Aimers/testset/submission.csv")
 df_sub["target"] = test_pred
 

@@ -16,7 +16,8 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 # 데이터 읽어오기
-ROOT_DIR = "C:/Users/antl/Desktop/LG Aimers/v2/"
+#ROOT_DIR = "C:/Users/antl/Desktop/LG Aimers/v2/"
+ROOT_DIR = "C:/Users/hyunj/OneDrive/바탕 화면/LG Aimers"
 RANDOM_STATE = 110
 
 # Load data
@@ -98,9 +99,9 @@ test_pred
 
 # 제출 파일 작성
 # 제출 데이터 읽어오기 (df_test는 전처리된 데이터가 저장됨)
-df_sub = pd.read_csv("C:/Users/antl/Desktop/LG Aimers/v2/testset/submission.csv")
+df_sub = pd.read_csv("C:/Users/hyunj/OneDrive/바탕 화면/LG Aimers/testset/submission.csv")
 df_sub["target"] = test_pred
 
 # 제출 파일 저장
-df_sub.to_csv(r"C:/Users/antl/Desktop/LG Aimers/v2/result/submission.csv", index=False)
+df_sub.to_csv(r"C:/Users/hyunj/OneDrive/바탕 화면/LG Aimers/result/submission.csv", index=False)
 print("finished programming")
