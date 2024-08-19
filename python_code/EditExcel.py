@@ -1,19 +1,21 @@
 import pandas as pd
 
-file_path = '/Users/hyeonggeun_kim/Documents/LG Aimers/v2/dataset/undersampled_data.xlsx'  # 엑셀 파일 경로
+# 엑셀 파일 경로
+file_path = '/Users/hyeonggeun_kim/Documents/LG Aimers/v2/dataset/undersampled_data.xlsx'
 df = pd.read_excel(file_path)
 
-# 추출할 열 이름 목록
-columns_to_extract = ['Process Desc._Dam','Head Zero Position Z Collect Result_Dam','Stage2 Line3 Distance Speed Collect Result_Dam','Stage3 Circle1 Distance Speed Collect Result_Dam',
-                      'Process Desc._AutoClave','Chamber Temp. Collect Result_AutoClave','Chamber Temp. Unit Time_AutoClave','1st Pressure 1st Pressure Unit Time_AutoClave','3rd Pressure Unit Time_AutoClave',
-                      'Process Desc._Fill1','WorkMode Collect Result_Fill1',
-                      'Process Desc._Fill2','WorkMode Collect Result_Fill2','target'
-]
+# 결측치가 있는 열 제거
+df_cleaned = df.dropna(axis=1)
 
+# 숫자형 열만 선택
+df_numeric = df_cleaned.select_dtypes(include=[float, int])
 
-# 특정 열 추출
-df_extracted = df[columns_to_extract]
+# 모든 값이 동일한 열 제거
+columns_to_drop = [col for col in df_numeric.columns if df_numeric[col].nunique() == 1]
+df_numeric = df_numeric.drop(columns=columns_to_drop)
 
 # 새로운 엑셀 파일로 저장
-output_file_path = '/Users/hyeonggeun_kim/Documents/LG Aimers/v2/dataset/preprocessed_data.xlsx'  # 저장할 새 엑셀 파일 경로
-df_extracted.to_excel(output_file_path, index=False)
+output_file_path = '/Users/hyeonggeun_kim/Documents/LG Aimers/v2/dataset/preprocessed_data_v2.xlsx'
+df_numeric.to_excel(output_file_path, index=False)
+
+print(f"데이터가 {output_file_path}에 성공적으로 저장되었습니다.")

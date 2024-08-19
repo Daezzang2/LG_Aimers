@@ -1,16 +1,14 @@
 import os
 import numpy as np
 import pandas as pd
-from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-from imblearn.over_sampling import SMOTE
-from tqdm import tqdm
 import warnings
 
 # 경고 메시지 숨기기
-warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
+warnings.filterwarnings("ignore")
 
 # 데이터 읽어오기
 ROOT_DIR = "/Users/hyeonggeun_kim/Documents/LG Aimers/v2/"
@@ -36,6 +34,17 @@ df_concat.value_counts("target")
 # 레이블 인코딩
 label_encoder = LabelEncoder()
 df_concat["target"] = label_encoder.fit_transform(df_concat["target"])
+
+# 데이터 전처리: 결측치가 있거나 문자열이 포함된 열을 제거
+columns_with_missing_values = df_concat.columns[df_concat.isnull().sum() > 0]
+columns_with_object_type = df_concat.select_dtypes(include=['object']).columns
+
+# 모든 값이 동일한 열 찾기
+columns_with_same_values = [col for col in df_concat.columns if df_concat[col].nunique() == 1]
+
+# 제외할 열 리스트
+columns_to_drop = list(set(columns_with_missing_values) | set(columns_with_object_type) | set(columns_with_same_values))
+df_concat = df_concat.drop(columns=columns_to_drop)
 
 # 데이터 분할
 df_train, df_val = train_test_split(
@@ -64,8 +73,13 @@ print_stats(df_val)
 df_train = df_train.apply(pd.to_numeric, errors='coerce').fillna(0)
 df_val = df_val.apply(pd.to_numeric, errors='coerce').fillna(0)
 
+# 오버샘플링을 제거하고 데이터를 그대로 사용
+features = [col for col in df_train.columns if col != "target"]
+train_x = df_train[features]
+train_y = df_train["target"]
+
 # 모델 정의
-model = XGBClassifier(random_state=RANDOM_STATE, eval_metric='logloss')
+model = LGBMClassifier(random_state=RANDOM_STATE)
 
 # 하이퍼파라미터 튜닝을 위한 그리드 서치 설정
 param_grid = {
@@ -73,7 +87,7 @@ param_grid = {
     'learning_rate': [0.1],
     'max_depth': [3],
     'subsample': [0.8],
-    'colsample_bytree': [0.8]
+    'colsample_bytree': [0.6, 0.8]
 }
 
 grid_search = GridSearchCV(
@@ -99,7 +113,12 @@ print(confusion_matrix(df_val['target'], val_pred))
 
 # 테스트 데이터 예측
 test_data = pd.read_csv(os.path.join(ROOT_DIR, "testset/test.csv"))
-df_test_x = test_data[features]
+
+# 테스트 데이터에서도 동일한 열 제거
+df_test_x = test_data.drop(columns=columns_to_drop, errors='ignore')
+
+# 학습 데이터와 동일한 피처 순서로 정렬
+df_test_x = df_test_x[features]
 
 # 피처 스케일링 및 변환
 df_test_x = df_test_x.apply(pd.to_numeric, errors='coerce').fillna(0)
@@ -111,5 +130,5 @@ df_sub = pd.read_csv("/Users/hyeonggeun_kim/Documents/LG Aimers/v2/testset/submi
 df_sub["target"] = label_encoder.inverse_transform(test_pred)
 
 # 제출 파일 저장
-df_sub.to_csv(r"/Users/hyeonggeun_kim/Documents/LG Aimers/v2/result/submission_xgboost.csv", index=False)
+df_sub.to_csv(r"/Users/hyeonggeun_kim/Documents/LG Aimers/v2/result/submission_lightgbm_v2.csv", index=False)
 print("finished programming")
